@@ -96,15 +96,22 @@ app.post('/api/users/:_id/exercises',(req,res)=>{
 app.get('/api/users/:_id/logs',(req,res)=>{
   //get user id
   const userId= req.params._id;
-
+  //get params
+  let { from, to, limit } = req.query;
+  
   Users.findById({_id:userId})
   .then(doc=>{
     //if not foun user
     if(!doc) return res.send('User not found');
+    
+    //if have paramters 
+    let query = {username: doc.username}; 
+    if (from && to) query.date = {$gte: new Date(from + 'T00:00:00'), $lte: new Date(to + 'T23:59:59')};
+    else if (from) query.date = {$gte: new Date(from + 'T00:00:00')};
+    else if (to) query.date = {$lte: new Date(to + 'T23:59:59')};
 
-    Exercise.find({username: doc.username})
+    Exercise.find(query).limit(limit)
     .then( docExcercises =>{
-      console.log(docExcercises);
       res.status(200).json({
         _id:doc._id,
         username:doc.username,
